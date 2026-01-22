@@ -1,5 +1,5 @@
 """
-WSGI config for HospyFlow_core project.
+WSGI config for hospyFlow_core project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'HospyFlow_core.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hospyFlow_core.settings')
 
 application = get_wsgi_application()
+

@@ -10,20 +10,57 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    primary: '#1E88E5', // Bleu principal
+    accent: '#7E57C2', // Violet accent
+    background: '#F4F6F8', // Fond clair
+    surface: 'rgba(255, 255, 255, 0.7)',
+    text: '#1C1C1E',
+    textSecondary: '#6C757D',
+    border: 'rgba(0, 0, 0, 0.1)',
+    tint: '#1E88E5',
+    success: '#43A047', // Vert succès
+    error: '#E53935', // Rouge critique
+    warning: '#FB8C00', // Orange alerte
+    white: '#FFFFFF',
+    icon: '#6C757D',
+    tabIconDefault: '#6C757D',
+    tabIconSelected: '#1E88E5',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    primary: '#1E88E5',
+    accent: '#7E57C2',
+    background: '#000000',
+    surface: 'rgba(28, 28, 30, 0.7)',
+    text: '#FFFFFF',
+    textSecondary: '#AEAEB2',
+    border: 'rgba(255, 255, 255, 0.15)',
+    tint: '#1E88E5',
+    success: '#43A047',
+    error: '#E53935',
+    warning: '#FB8C00',
+    white: '#FFFFFF',
+    icon: '#AEAEB2',
+    tabIconDefault: '#AEAEB2',
+    tabIconSelected: '#1E88E5',
+  },
+};
+
+export const Glass = {
+  light: {
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+  },
+  dark: {
+    backgroundColor: 'rgba(28, 28, 30, 0.65)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
   },
 };
 

@@ -1,172 +1,189 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { GlassView } from '@/components/ui/GlassView';
+import { StatusBar } from 'expo-status-bar';
+import apiService from '@/services/api';
 
-const { width } = Dimensions.get('window');
+const QUICK_ACTIONS = [
+  { id: 'delay', label: 'Retard Flux', icon: 'time-outline', color: '#FF9500', typeId: 1, gravity: 'MEDIUM' },
+  { id: 'breakdown', label: 'Panne Matériel', icon: 'construct-outline', color: '#FF3B30', typeId: 2, gravity: 'HIGH' },
+  { id: 'missing', label: 'Manque Personnel', icon: 'people-outline', color: '#7E57C2', typeId: 3, gravity: 'HIGH' },
+  { id: 'crowd', label: 'Saturation', icon: 'alert-circle-outline', color: '#E53935', typeId: 4, gravity: 'CRITICAL' },
+];
 
-// Mock Data for the chart
-const HOURLY_FLOW = [30, 45, 28, 80, 99, 43, 50, 60, 70, 40, 30, 20];
+export default function StaffDashboard() {
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
 
-export default function DashboardScreen() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const [currentService, setCurrentService] = useState<any>(null);
+  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const services = await apiService.getServices();
+      // For PoC/MVP, we pick the first service as "Current"
+      if (services.length > 0) {
+        setCurrentService(services[0]);
+      }
+
+      // In a real app, we'd have a dedicated recent events endpoint
+      // Mocking for now as the backend ViewSet returns all
+      setRecentEvents([
+        { title: "Panne ECG", time: "10 min", status: "Traitée", icon: "construct", color: "#E53935" },
+        { title: "Saturation", time: "45 min", status: "En cours", icon: "alert-circle", color: "#FB8C00" }
+      ]);
+    } catch (error) {
+      console.error("Dashboard error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuickSignal = async (action: any) => {
+    if (!currentService) return;
+
+    try {
+      const signalData = {
+        personnel: 1, // Mock admin user ID
+        service: currentService.id,
+        type_flux: action.typeId,
+        description: `Signal express: ${action.label}`,
+        niveau_gravite: action.gravity as any,
+      };
+
+      await apiService.createSignal(signalData);
+      alert("Signal envoyé avec succès !");
+
+      // Refresh to see if state changed to TENSION
+      loadDashboardData();
+    } catch (error) {
+      console.error("Signal error", error);
+      alert("Erreur lors de l'envoi du signal.");
+    }
+  };
+
+  const isTension = currentService?.etat === "TENSION";
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ImageBackground
+      source={require('@/assets/images/bg.png')}
+      style={styles.backgroundImage}
+      blurRadius={10}
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.greeting, { color: theme.textSecondary }]}>Bienvenue, Dr. Admin</Text>
-            <Text style={[styles.title, { color: theme.text }]}>Dashboard Global</Text>
-          </View>
-          <TouchableOpacity style={[styles.profileButton, { backgroundColor: theme.surface }]}>
-            <Ionicons name="notifications-outline" size={24} color={theme.text} />
-            <View style={styles.badge} />
-          </TouchableOpacity>
-        </View>
-
-        {/* KPI Cards */}
-        <View style={styles.kpiContainer}>
-          <KpiCard
-            title="Incidents"
-            value="3"
-            icon="warning"
-            color={theme.error}
-            theme={theme}
-            trend="+1 vs hier"
-          />
-          <KpiCard
-            title="Temps d'attente"
-            value="45m"
-            icon="time"
-            color={theme.primary}
-            theme={theme}
-            trend="-5m"
-            trendPositive
-          />
-          <KpiCard
-            title="Alertes Actives"
-            value="12"
-            icon="notifications-circle"
-            color="#F57C00"
-            theme={theme}
-          />
-        </View>
-
-        {/* Main Chart Section */}
-        <View style={[styles.section, { backgroundColor: theme.surface }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Flux Opérationnel</Text>
-            <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>Passages aux urgences / heure</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Bonjour, Infirmier Lucas</Text>
+              <Text style={styles.serviceName}>{currentService?.nom || 'Chargement...'}</Text>
+            </View>
+            <GlassView intensity={20} borderRadius={15} style={styles.statusPill}>
+              <View style={[styles.statusDot, { backgroundColor: isTension ? theme.error : theme.success }]} />
+              <Text style={styles.statusText}>{isTension ? 'ÉTAT : TENSION' : 'ÉTAT : NORMAL'}</Text>
+            </GlassView>
           </View>
 
-          <View style={styles.chartContainer}>
-            {/* Simple Bar Chart Visualization */}
-            <View style={styles.chart}>
-              {HOURLY_FLOW.map((value, index) => (
-                <View key={index} style={styles.barContainer}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: `${value}%`,
-                        backgroundColor: value > 80 ? theme.error : theme.primary
-                      }
-                    ]}
-                  />
-                  <Text style={[styles.barLabel, { color: theme.textSecondary }]}>{index}h</Text>
-                </View>
+          {/* Quick Signaling Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Signaler en 1 clic</Text>
+            <View style={styles.grid}>
+              {QUICK_ACTIONS.map((action) => (
+                <TouchableOpacity
+                  key={action.id}
+                  style={styles.gridItem}
+                  onPress={() => handleQuickSignal(action)}
+                >
+                  <GlassView intensity={40} borderRadius={24} style={styles.actionCard}>
+                    <View style={[styles.iconCircle, { backgroundColor: action.color + '20' }]}>
+                      <Ionicons name={action.icon as any} size={28} color={action.color} />
+                    </View>
+                    <Text style={styles.actionLabel}>{action.label}</Text>
+                  </GlassView>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
-        </View>
 
-        {/* Critical Services Summary */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeading, { color: theme.text }]}>Services Sous Pression</Text>
+          {/* AI Bottleneck analysis */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Analyse IA (Moteur Singleton)</Text>
+            <GlassView intensity={50} borderRadius={24} style={styles.aiCard}>
+              <View style={styles.aiHeader}>
+                <Ionicons name="sparkles" size={20} color={theme.primary} />
+                <Text style={styles.aiTitle}>Prédiction de Flux</Text>
+              </View>
+              <Text style={styles.aiDescription}>
+                Risque de saturation élevé prévu en {currentService?.nom} d'ici 1h. Renforcement conseillé.
+              </Text>
+            </GlassView>
+          </View>
 
-          <ServiceCard
-            name="Urgences"
-            status="Critique"
-            occupancy={95}
-            waitingTime="2h 15m"
-            theme={theme}
-            isCritical
-          />
-          <ServiceCard
-            name="Radiologie"
-            status="Chargé"
-            occupancy={78}
-            waitingTime="45m"
-            theme={theme}
-          />
-          <ServiceCard
-            name="Cardiologie"
-            status="Normal"
-            occupancy={40}
-            waitingTime="10m"
-            theme={theme}
-          />
-        </View>
+          {/* Recent Events */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Historique Récent</Text>
+            </View>
+            <View style={styles.historyList}>
+              {recentEvents.map((event, idx) => (
+                <HistoryItem
+                  key={idx}
+                  title={event.title}
+                  time={`Il y a ${event.time}`}
+                  status={event.status}
+                  icon={event.icon}
+                  color={event.color}
+                />
+              ))}
+            </View>
+          </View>
 
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
-// Sub-components
-function KpiCard({ title, value, icon, color, theme, trend, trendPositive }: any) {
+function HistoryItem({ title, time, status, icon, color }: any) {
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface }]}>
-      <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={24} color={color} />
+    <GlassView intensity={30} borderRadius={18} style={styles.historyItem}>
+      <View style={[styles.historyIcon, { backgroundColor: color + '15' }]}>
+        <Ionicons name={icon} size={20} color={color} />
       </View>
-      <View>
-        <Text style={[styles.cardValue, { color: theme.text }]}>{value}</Text>
-        <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>{title}</Text>
-        {trend && (
-          <Text style={[styles.trend, { color: trendPositive ? theme.success : theme.error }]}>
-            {trend}
-          </Text>
-        )}
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={styles.historyTitle}>{title}</Text>
+        <Text style={styles.historyTime}>{time}</Text>
       </View>
-    </View>
-  );
-}
-
-function ServiceCard({ name, status, occupancy, waitingTime, theme, isCritical }: any) {
-  return (
-    <View style={[styles.serviceCard, { backgroundColor: theme.surface }]}>
-      <View style={styles.serviceHeader}>
-        <Text style={[styles.serviceName, { color: theme.text }]}>{name}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: isCritical ? theme.error + '20' : theme.success + '20' }]}>
-          <Text style={[styles.statusText, { color: isCritical ? theme.error : theme.success }]}>{status}</Text>
-        </View>
+      <View style={styles.statusLabel}>
+        <Text style={styles.statusLabelText}>{status}</Text>
       </View>
-
-      <View style={styles.serviceStats}>
-        <View>
-          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Occupation</Text>
-          <Text style={[styles.statValue, { color: theme.text }]}>{occupancy}%</Text>
-        </View>
-        <View>
-          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Attente</Text>
-          <Text style={[styles.statValue, { color: theme.text }]}>{waitingTime}</Text>
-        </View>
-        <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
-          <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
-        </View>
-      </View>
-    </View>
+    </GlassView>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -177,166 +194,149 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+    alignItems: 'flex-start',
+    marginBottom: 32,
+    marginTop: 10,
   },
   greeting: {
+    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 14,
     fontWeight: '500',
   },
-  title: {
-    fontSize: 28,
+  serviceName: {
+    color: '#fff',
+    fontSize: 22,
     fontWeight: '700',
+    marginTop: 2,
   },
-  profileButton: {
-    padding: 10,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  badge: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#D32F2F',
-    borderWidth: 1,
-    borderColor: '#fff',
-  },
-  kpiContainer: {
+  statusPill: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    gap: 12,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  card: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    alignItems: 'flex-start',
-    gap: 12,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 8,
   },
-  iconContainer: {
-    padding: 8,
-    borderRadius: 10,
-  },
-  cardValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  trend: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
+  statusText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   section: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  sectionHeader: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
   sectionTitle: {
+    color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 16,
+    marginLeft: 4,
   },
-  sectionSubtitle: {
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  chartContainer: {
-    height: 180,
-  },
-  chart: {
-    flex: 1,
+  grid: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 8,
+    flexWrap: 'wrap',
+    marginHorizontal: -8,
   },
-  barContainer: {
-    flex: 1,
-    height: '100%',
-    justifyContent: 'flex-end',
+  gridItem: {
+    width: '50%',
+    padding: 8,
+  },
+  actionCard: {
+    padding: 20,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    height: 140,
   },
-  bar: {
-    width: '100%',
-    borderRadius: 6,
-    minHeight: 4,
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
-  barLabel: {
-    fontSize: 10,
+  actionLabel: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
-  sectionContainer: {
-    gap: 16,
+  aiCard: {
+    padding: 20,
   },
-  sectionHeading: {
-    fontSize: 18,
+  aiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiTitle: {
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
+    marginLeft: 8,
   },
-  serviceCard: {
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  aiDescription: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
   },
-  serviceHeader: {
+  aiButton: {
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
-  serviceName: {
-    fontSize: 16,
+  historyList: {
+    gap: 12,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  historyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyTitle: {
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '600',
   },
-  statusBadge: {
+  historyTime: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  statusLabel: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
   },
-  statusText: {
-    fontSize: 12,
+  statusLabelText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
     fontWeight: '600',
-  },
-  serviceStats: {
-    flexDirection: 'row',
-    gap: 24,
-  },
-  statLabel: {
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  }
 });

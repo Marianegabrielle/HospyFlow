@@ -1,26 +1,30 @@
 export const Colors = {
     light: {
-        primary: '#005EB8', // NHS Blue
-        background: '#F4F6F8', // Off-white
-        surface: '#FFFFFF', // Pure White
-        text: '#1A1C1E', // Dark Grey
-        textSecondary: '#6C757D', // Medium Grey
+        primary: '#1E88E5',
+        accent: '#7E57C2',
+        background: '#F4F6F8',
+        surface: '#FFFFFF',
+        text: '#1C1C1E',
+        textSecondary: '#6C757D',
         border: '#E0E0E0',
-        error: '#D32F2F',
-        success: '#2E7D32',
-        tint: '#005EB8',
+        error: '#E53935',
+        success: '#43A047',
+        warning: '#FB8C00',
+        tint: '#1E88E5',
         tabIconDefault: '#6C757D',
-        tabIconSelected: '#005EB8',
+        tabIconSelected: '#1E88E5',
     },
     dark: {
-        primary: '#005EB8',
-        background: '#1A1C1E', // Dark mode background
+        primary: '#1E88E5',
+        accent: '#7E57C2',
+        background: '#1A1C1E',
         surface: '#2C2C2E',
         text: '#FFFFFF',
         textSecondary: '#A1A1AA',
         border: '#404040',
-        error: '#EF5350',
-        success: '#66BB6A',
+        error: '#E53935',
+        success: '#43A047',
+        warning: '#FB8C00',
         tint: '#fff',
         tabIconDefault: '#ccc',
         tabIconSelected: '#fff',

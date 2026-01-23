@@ -17,7 +17,7 @@ export default function AdminAnalytics() {
 
   const fetchData = async () => {
     try {
-      const summary = await apiService.getSummary();
+      const summary = await apiService.getServicesSummary();
       setData(summary);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);

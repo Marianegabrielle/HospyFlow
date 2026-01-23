@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,17 +7,50 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { GlassView } from '@/components/ui/GlassView';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
+import apiService from '@/services/api';
+import authService from '@/services/auth';
 
 const MENU_ITEMS = [
-    { id: 'incidents', label: 'Historique des Incidents', icon: 'list', route: '/(tabs)/incidents' },
-    { id: 'analytics', label: 'Analytics & Goulots (IA)', icon: 'analytics', route: '/(tabs)/analytics' },
-    { id: 'users', label: 'Gestion Utilisateurs', icon: 'people', route: '/(tabs)/users' },
-    { id: 'settings', label: 'Paramètres Système', icon: 'settings', route: '/(tabs)/settings' },
+    { id: 'incidents', label: 'Historique des Incidents', icon: 'list', route: '/(tabs)/incidents', roles: ['NURSE', 'DOCTOR', 'LAB_TECH', 'ADMIN'] },
+    { id: 'analytics', label: 'Analytics & Goulots (IA)', icon: 'analytics', route: '/(tabs)/analytics', roles: ['ADMIN'] },
+    { id: 'users', label: 'Gestion Utilisateurs', icon: 'people', route: '/(tabs)/users', roles: ['ADMIN'] },
+    { id: 'settings', label: 'Paramètres Système', icon: 'settings', route: '/(tabs)/settings', roles: ['ADMIN'] },
 ];
 
 export default function MenuScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
+    const [userRole, setUserRole] = useState<string>('NURSE'); // Default role
+
+    useEffect(() => {
+        loadUserRole();
+    }, []);
+
+    const loadUserRole = async () => {
+        try {
+            const user = await authService.getUser();
+            if (user) {
+                setUserRole(user.role);
+            }
+        } catch (error) {
+            console.error('Failed to load user role', error);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await apiService.logout();
+            router.replace('/');
+        } catch (error) {
+            console.error('Logout error', error);
+            router.replace('/');
+        }
+    };
+
+    // Filter menu items based on user role
+    const filteredMenuItems = MENU_ITEMS.filter(item =>
+        item.roles.includes(userRole as any)
+    );
 
     return (
         <ImageBackground
@@ -35,11 +68,11 @@ export default function MenuScreen() {
                     </View>
 
                     <GlassView intensity={50} borderRadius={30} style={styles.menuCard}>
-                        {MENU_ITEMS.map((item, index) => (
+                        {filteredMenuItems.map((item, index) => (
                             <TouchableOpacity
                                 key={item.id}
                                 onPress={() => router.push(item.route as any)}
-                                style={[styles.menuItem, index !== MENU_ITEMS.length - 1 && styles.border]}
+                                style={[styles.menuItem, index !== filteredMenuItems.length - 1 && styles.border]}
                             >
                                 <View style={styles.iconContainer}>
                                     <Ionicons name={item.icon as any} size={22} color={theme.primary} />
@@ -51,7 +84,7 @@ export default function MenuScreen() {
                     </GlassView>
 
                     <TouchableOpacity
-                        onPress={() => router.replace('/')}
+                        onPress={handleLogout}
                         style={styles.logoutButton}
                     >
                         <Ionicons name="log-out-outline" size={20} color={theme.error} />

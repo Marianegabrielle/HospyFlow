@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
@@ -14,6 +14,7 @@ export default function AlertsScreen() {
 
     const [alerts, setAlerts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
 
     useEffect(() => {
         loadAlerts();
@@ -27,6 +28,34 @@ export default function AlertsScreen() {
             console.error("Failed to load alerts", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleAcknowledgeAlert = async (id: number) => {
+        try {
+            setActionLoading(id);
+            await apiService.acknowledgeAlert(id);
+            await loadAlerts(); // Refresh list
+            Alert.alert("Succès", "Alerte acquittée avec succès");
+        } catch (error) {
+            console.error("Failed to acknowledge alert", error);
+            Alert.alert("Erreur", "Impossible d'acquitter l'alerte");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleResolveAlert = async (id: number) => {
+        try {
+            setActionLoading(id);
+            await apiService.resolveAlert(id);
+            await loadAlerts(); // Refresh list
+            Alert.alert("Succès", "Alerte résolue avec succès");
+        } catch (error) {
+            console.error("Failed to resolve alert", error);
+            Alert.alert("Erreur", "Impossible de résoudre l'alerte");
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -72,9 +101,19 @@ export default function AlertsScreen() {
                                     </View>
 
                                     <View style={styles.actions}>
-                                        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.primary, flex: 1 }]}>
-                                            <Text style={styles.buttonText}>Marquer Traité</Text>
-                                            <Ionicons name="checkmark-circle" size={18} color="#fff" style={{ marginLeft: 6 }} />
+                                        <TouchableOpacity
+                                            style={[styles.primaryButton, { backgroundColor: theme.primary, flex: 1 }]}
+                                            onPress={() => handleAcknowledgeAlert(alert.id)}
+                                            disabled={actionLoading === alert.id}
+                                        >
+                                            {actionLoading === alert.id ? (
+                                                <ActivityIndicator color="#fff" size="small" />
+                                            ) : (
+                                                <>
+                                                    <Text style={styles.buttonText}>Marquer Traité</Text>
+                                                    <Ionicons name="checkmark-circle" size={18} color="#fff" style={{ marginLeft: 6 }} />
+                                                </>
+                                            )}
                                         </TouchableOpacity>
                                     </View>
                                 </GlassView>

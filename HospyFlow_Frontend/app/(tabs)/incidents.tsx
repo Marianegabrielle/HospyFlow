@@ -6,7 +6,8 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { GlassView } from '@/components/ui/GlassView';
 import { StatusBar } from 'expo-status-bar';
-import { apiClient } from '@/services/api';
+import apiService from '@/services/api';
+import { router } from 'expo-router';
 
 export default function IncidentsScreen() {
     const colorScheme = useColorScheme() ?? 'light';
@@ -21,8 +22,8 @@ export default function IncidentsScreen() {
 
     const loadIncidents = async () => {
         try {
-            const data = await apiClient.get('/evenements/');
-            setIncidents(data.data);
+            const data = await apiService.getEvents();
+            setIncidents(data);
         } catch (error) {
             console.error("Failed to load incidents", error);
         } finally {
@@ -49,7 +50,7 @@ export default function IncidentsScreen() {
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => console.log('back')} style={styles.backButton}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <Ionicons name="chevron-back" size={24} color="#fff" />
                         </TouchableOpacity>
                         <View>

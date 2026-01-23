@@ -1,0 +1,244 @@
+[
+    {
+        "model": "accounts.department",
+        "pk": 1,
+        "fields": {
+            "name": "Urgences",
+            "code": "URG",
+            "description": "Service des urgences de l'hôpital",
+            "floor": "RDC",
+            "building": "Bâtiment A",
+            "is_active": true
+        }
+    },
+    {
+        "model": "accounts.department",
+        "pk": 2,
+        "fields": {
+            "name": "Laboratoire",
+            "code": "LAB",
+            "description": "Laboratoire d'analyses médicales",
+            "floor": "1er étage",
+            "building": "Bâtiment B",
+            "is_active": true
+        }
+    },
+    {
+        "model": "accounts.department",
+        "pk": 3,
+        "fields": {
+            "name": "Radiologie",
+            "code": "RAD",
+            "description": "Service d'imagerie médicale",
+            "floor": "Sous-sol",
+            "building": "Bâtiment A",
+            "is_active": true
+        }
+    },
+    {
+        "model": "accounts.department",
+        "pk": 4,
+        "fields": {
+            "name": "Chirurgie",
+            "code": "CHIR",
+            "description": "Bloc opératoire et service de chirurgie",
+            "floor": "2ème étage",
+            "building": "Bâtiment C",
+            "is_active": true
+        }
+    },
+    {
+        "model": "accounts.department",
+        "pk": 5,
+        "fields": {
+            "name": "Cardiologie",
+            "code": "CARDIO",
+            "description": "Service de cardiologie",
+            "floor": "3ème étage",
+            "building": "Bâtiment A",
+            "is_active": true
+        }
+    },
+    {
+        "model": "workflows.typeworkflow",
+        "pk": 1,
+        "fields": {
+            "nom": "Admission Patient",
+            "code": "ADM",
+            "categorie": "ADMISSION",
+            "description": "Processus d'admission d'un nouveau patient",
+            "duree_standard_minutes": 45,
+            "seuil_alerte_minutes": 60,
+            "est_actif": true,
+            "ordre_affichage": 1
+        }
+    },
+    {
+        "model": "workflows.typeworkflow",
+        "pk": 2,
+        "fields": {
+            "nom": "Examens de Laboratoire",
+            "code": "EXAM_LAB",
+            "categorie": "LABORATOIRE",
+            "description": "Workflow des analyses de laboratoire",
+            "duree_standard_minutes": 120,
+            "seuil_alerte_minutes": 180,
+            "est_actif": true,
+            "ordre_affichage": 2
+        }
+    },
+    {
+        "model": "workflows.typeworkflow",
+        "pk": 3,
+        "fields": {
+            "nom": "Prise en charge Urgences",
+            "code": "URG_PEC",
+            "categorie": "URGENCE",
+            "description": "Workflow de prise en charge aux urgences",
+            "duree_standard_minutes": 30,
+            "seuil_alerte_minutes": 45,
+            "est_actif": true,
+            "ordre_affichage": 3
+        }
+    },
+    {
+        "model": "workflows.etapeworkflow",
+        "pk": 1,
+        "fields": {
+            "type_workflow": 1,
+            "nom": "Accueil et enregistrement",
+            "code": "ACCUEIL",
+            "description": "Enregistrement administratif du patient",
+            "ordre": 1,
+            "duree_estimee_minutes": 10,
+            "est_obligatoire": true
+        }
+    },
+    {
+        "model": "workflows.etapeworkflow",
+        "pk": 2,
+        "fields": {
+            "type_workflow": 1,
+            "nom": "Évaluation infirmière",
+            "code": "EVAL_INF",
+            "description": "Prise des constantes et évaluation initiale",
+            "ordre": 2,
+            "duree_estimee_minutes": 15,
+            "est_obligatoire": true
+        }
+    },
+    {
+        "model": "workflows.etapeworkflow",
+        "pk": 3,
+        "fields": {
+            "type_workflow": 1,
+            "nom": "Consultation médicale",
+            "code": "CONSULT",
+            "description": "Examen par le médecin",
+            "ordre": 3,
+            "duree_estimee_minutes": 20,
+            "est_obligatoire": true
+        }
+    },
+    {
+        "model": "events.categorieevenement",
+        "pk": 1,
+        "fields": {
+            "nom": "Retard de résultats",
+            "code": "RETARD_RES",
+            "type_categorie": "RETARD",
+            "description": "Retard dans la réception des résultats d'examens",
+            "icone": "clock",
+            "couleur": "#FFA500",
+            "est_actif": true,
+            "ordre_affichage": 1
+        }
+    },
+    {
+        "model": "events.categorieevenement",
+        "pk": 2,
+        "fields": {
+            "nom": "Attente lit",
+            "code": "ATTENTE_LIT",
+            "type_categorie": "BLOCAGE",
+            "description": "Patient en attente d'un lit disponible",
+            "icone": "bed",
+            "couleur": "#FF4444",
+            "est_actif": true,
+            "ordre_affichage": 2
+        }
+    },
+    {
+        "model": "events.categorieevenement",
+        "pk": 3,
+        "fields": {
+            "nom": "Panne équipement",
+            "code": "PANNE_EQUIP",
+            "type_categorie": "EQUIPEMENT",
+            "description": "Équipement médical en panne ou indisponible",
+            "icone": "wrench",
+            "couleur": "#9933FF",
+            "est_actif": true,
+            "ordre_affichage": 3
+        }
+    },
+    {
+        "model": "events.categorieevenement",
+        "pk": 4,
+        "fields": {
+            "nom": "Coordination inter-services",
+            "code": "COORD_SERV",
+            "type_categorie": "COORDINATION",
+            "description": "Problème de coordination entre services",
+            "icone": "users",
+            "couleur": "#3366FF",
+            "est_actif": true,
+            "ordre_affichage": 4
+        }
+    },
+    {
+        "model": "alerts.reglealerte",
+        "pk": 1,
+        "fields": {
+            "nom": "Seuil événements critiques",
+            "code": "SEUIL_CRIT",
+            "description": "Alerte quand plus de 3 événements critiques en 1 heure",
+            "type_regle": "SEUIL_EVENEMENTS",
+            "seuil_valeur": 3,
+            "periode_minutes": 60,
+            "priorite": "URGENTE",
+            "message_template": "ALERTE: {valeur} événements critiques détectés en {seuil} minutes",
+            "est_actif": true
+        }
+    },
+    {
+        "model": "alerts.reglealerte",
+        "pk": 2,
+        "fields": {
+            "nom": "Événement critique",
+            "code": "EVT_CRIT",
+            "description": "Alerte immédiate pour tout événement critique",
+            "type_regle": "EVENEMENT_CRITIQUE",
+            "seuil_valeur": 1,
+            "periode_minutes": 0,
+            "priorite": "URGENTE",
+            "message_template": "{titre}: {description}",
+            "est_actif": true
+        }
+    },
+    {
+        "model": "alerts.reglealerte",
+        "pk": 3,
+        "fields": {
+            "nom": "Workflow en retard",
+            "code": "WF_RETARD",
+            "description": "Alerte pour les workflows dépassant le seuil",
+            "type_regle": "WORKFLOW_RETARD",
+            "seuil_valeur": 1,
+            "periode_minutes": 15,
+            "priorite": "HAUTE",
+            "message_template": "Workflow en retard: {titre}",
+            "est_actif": true
+        }
+    }
+]

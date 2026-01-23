@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: hospyflow_db
+    environment:
+      POSTGRES_DB: hospyflow
+      POSTGRES_USER: hospyflow_user
+      POSTGRES_PASSWORD: hospyflow_password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U hospyflow_user -d hospyflow" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: hospyflow_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - DATABASE_URL=postgres://hospyflow_user:hospyflow_password123@db:5432/hospyflow
+      - USE_POSTGRES=True
+      - CORS_ALLOW_ALL_ORIGINS=True
+      - SECRET_KEY=django-insecure-hospyflow-dev-key-change-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

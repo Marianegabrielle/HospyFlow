@@ -6,7 +6,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { GlassView } from '@/components/ui/GlassView';
 import { StatusBar } from 'expo-status-bar';
-import apiService, { apiClient } from '@/services/api';
+import apiService from '@/services/api';
 
 const INCIDENT_TYPES = [
     { label: 'Retard Flux', icon: 'time', id: 1 },
@@ -32,14 +32,14 @@ export default function ReportScreen() {
 
     const loadData = async () => {
         try {
-            const [servicesData, fluxData] = await Promise.all([
+            const [servicesData, categoriesData] = await Promise.all([
                 apiService.getServices(),
-                apiClient.get('/flux/') // Using apiClient directly since apiService doesn't have it yet
+                apiService.getEventCategories()
             ]);
             setServices(servicesData);
-            setFluxTypes(fluxData.data);
+            setFluxTypes(categoriesData);
             if (servicesData.length > 0) setSelectedService(servicesData[0].id);
-            if (fluxData.data.length > 0) setSelectedType(fluxData.data[0].id);
+            if (categoriesData.length > 0) setSelectedType(categoriesData[0].id);
         } catch (error) {
             console.error("Failed to load data", error);
         }
@@ -54,7 +54,7 @@ export default function ReportScreen() {
         setIsLoading(true);
         try {
             // personnel id 1 is 'admin' (seeded)
-            await apiService.createSignal({
+            await apiService.createEvent({
                 personnel: 1,
                 service: selectedService,
                 type_flux: selectedType,

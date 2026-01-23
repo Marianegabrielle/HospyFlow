@@ -60,7 +60,7 @@ export default function StaffDashboard() {
         niveau_gravite: action.gravity as any,
       };
 
-      await apiService.createSignal(signalData);
+      await apiService.createEvent(signalData);
       alert("Signal envoyé avec succès !");
 
       // Refresh to see if state changed to TENSION

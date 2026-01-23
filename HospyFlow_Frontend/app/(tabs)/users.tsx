@@ -1,11 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { GlassView } from '@/components/ui/GlassView';
 import { StatusBar } from 'expo-status-bar';
+import { apiClient } from '@/services/api';
+import authService from '@/services/auth';
 
 const USERS = [
     { id: '1', name: 'Dr. Sarah Meyer', role: 'Administrateur', service: 'Direction', status: 'Online' },
@@ -17,6 +19,80 @@ const USERS = [
 export default function UsersScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
+    const [users, setUsers] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        checkAccess();
+    }, []);
+
+    const checkAccess = async () => {
+        try {
+            const user = await authService.getUser();
+            if (user && user.role === 'ADMIN') {
+                setIsAdmin(true);
+                loadUsers();
+            } else {
+                setIsLoading(false);
+                Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
+            }
+        } catch (error) {
+            console.error('Failed to check access', error);
+            setIsLoading(false);
+        }
+    };
+
+    const loadUsers = async () => {
+        try {
+            setIsLoading(true);
+            const response = await apiClient.get('/auth/users/');
+            setUsers(response.data);
+        } catch (error) {
+            console.error('Failed to load users', error);
+            Alert.alert('Erreur', 'Impossible de charger les utilisateurs');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleAddUser = () => {
+        Alert.alert('Fonctionnalité à venir', 'La création d\'utilisateur sera disponible prochainement');
+    };
+
+    const handleEditUser = (userId: number) => {
+        Alert.alert('Fonctionnalité à venir', `Édition de l'utilisateur #${userId} sera disponible prochainement`);
+    };
+
+    if (isLoading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }]}>
+                <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+        );
+    }
+
+    if (!isAdmin) {
+        return (
+            <ImageBackground
+                source={require('@/assets/images/bg.png')}
+                style={styles.backgroundImage}
+                blurRadius={10}
+            >
+                <SafeAreaView style={styles.container}>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                        <Ionicons name="lock-closed" size={64} color="rgba(255,255,255,0.3)" />
+                        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700', marginTop: 20, textAlign: 'center' }}>
+                            Accès Restreint
+                        </Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 8, textAlign: 'center' }}>
+                            Cette page est réservée aux administrateurs
+                        </Text>
+                    </View>
+                </SafeAreaView>
+            </ImageBackground>
+        );
+    }
 
     return (
         <ImageBackground
@@ -34,7 +110,10 @@ export default function UsersScreen() {
                     </View>
 
                     <View style={styles.actions}>
-                        <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.primary }]}>
+                        <TouchableOpacity
+                            style={[styles.addButton, { backgroundColor: theme.primary }]}
+                            onPress={handleAddUser}
+                        >
                             <Ionicons name="person-add" size={20} color="#fff" />
                             <Text style={styles.addButtonText}>Nouvel Utilisateur</Text>
                         </TouchableOpacity>
@@ -55,7 +134,10 @@ export default function UsersScreen() {
                                     <Text style={styles.userRole}>{user.role} • {user.service}</Text>
                                 </View>
 
-                                <TouchableOpacity style={styles.editButton}>
+                                <TouchableOpacity
+                                    style={styles.editButton}
+                                    onPress={() => handleEditUser(parseInt(user.id))}
+                                >
                                     <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.4)" />
                                 </TouchableOpacity>
                             </GlassView>
